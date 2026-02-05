@@ -171,7 +171,6 @@ app.use('/api/campaigns', authMiddleware, require('./routes/campaigns'));
 app.use('/api/spells', require('./routes/spells'));
 app.use('/api/monsters', require('./routes/monsters'));
 app.use('/api/maps', authMiddleware, require('./routes/maps'));
-app.use('/api/equipment', require('./routes/equipment'));
 
 app.use(cors({
   origin: 'http://localhost:5173',

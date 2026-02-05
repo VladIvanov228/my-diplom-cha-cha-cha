@@ -183,6 +183,10 @@ CREATE TABLE character_skills (
   UNIQUE(character_id, skill_id)
 );
 
+-- Индексы для быстрого поиска
+CREATE INDEX idx_character_skills_character_id ON character_skills(character_id);
+CREATE INDEX idx_character_skills_skill_id ON character_skills(skill_id);
+
 -- Снаряжение
 CREATE TABLE IF NOT EXISTS character_equipment (
     id SERIAL PRIMARY KEY,
@@ -235,79 +239,4 @@ CREATE TABLE IF NOT EXISTS backgrounds (
     features JSONB
 );
 
--- СНАРЯЖЕНИЕ И ИНВЕНТАРЬ
-
--- 1. Типы предметов (справочник)
-CREATE TABLE IF NOT EXISTS item_types (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
-    category VARCHAR(50) NOT NULL, -- weapon, armor, tool, consumable, etc.
-    description TEXT
-);
-
--- 2. Предметы (справочник D&D 5e)
-CREATE TABLE IF NOT EXISTS items (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    type_id INTEGER REFERENCES item_types(id),
-    description TEXT,
-    weight DECIMAL(5,2) DEFAULT 0, -- в фунтах
-    cost DECIMAL(10,2) DEFAULT 0, -- в золотых монетах
-    properties JSONB, -- свойства предмета
-    rarity VARCHAR(50) DEFAULT 'common',
-    requires_attunement BOOLEAN DEFAULT false,
-    attunement_conditions TEXT
-);
-
--- 3. Инвентарь персонажа
-CREATE TABLE IF NOT EXISTS character_inventory (
-    id SERIAL PRIMARY KEY,
-    character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
-    item_id INTEGER REFERENCES items(id),
-    custom_name VARCHAR(255), -- если предмет кастомный
-    custom_description TEXT,
-    quantity INTEGER DEFAULT 1,
-    weight DECIMAL(5,2), -- вес одного предмета
-    cost DECIMAL(10,2), -- стоимость одного предмета
-    equipped BOOLEAN DEFAULT false,
-    equipped_slot VARCHAR(50), -- main_hand, off_hand, head, chest, etc.
-    attuned BOOLEAN DEFAULT false,
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Проверка: либо стандартный предмет, либо кастомный
-    CONSTRAINT valid_item CHECK (
-        (item_id IS NOT NULL) OR 
-        (custom_name IS NOT NULL AND custom_description IS NOT NULL)
-    )
-);
-
--- 4. Корабли и транспорт (опционально)
-CREATE TABLE IF NOT EXISTS vehicles (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    type VARCHAR(100), -- cart, wagon, ship, etc.
-    speed INTEGER,
-    capacity DECIMAL(10,2), -- грузоподъемность
-    cost DECIMAL(10,2),
-    description TEXT
-);
-
--- 5. Владение транспортом
-CREATE TABLE IF NOT EXISTS character_vehicles (
-    id SERIAL PRIMARY KEY,
-    character_id INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
-    vehicle_id INTEGER REFERENCES vehicles(id),
-    custom_name VARCHAR(255),
-    condition VARCHAR(50) DEFAULT 'good',
-    notes TEXT
-);
-
--- Индексы для быстрого поиска
-CREATE INDEX idx_character_skills_character_id ON character_skills(character_id);
-CREATE INDEX idx_character_skills_skill_id ON character_skills(skill_id);
-CREATE INDEX idx_character_inventory_character_id ON character_inventory(character_id);
-CREATE INDEX idx_character_inventory_equipped ON character_inventory(equipped) WHERE equipped = true;
-CREATE INDEX idx_items_type_id ON items(type_id);
-CREATE INDEX idx_items_rarity ON items(rarity);
+--kfkfkfkf

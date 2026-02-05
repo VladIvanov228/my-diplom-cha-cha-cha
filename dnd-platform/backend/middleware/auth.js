@@ -12,10 +12,7 @@ module.exports = function(req, res, next) {
     '/api/auth/login',
     '/api/auth/register', 
     '/api/characters/data/classes',
-    '/api/characters/data/races',
-    '/api/equipment/types',
-    '/api/equipment/items',
-    '/api/equipment/items/:id'
+    '/api/characters/data/races'
   ]
   
   // // Также делаем публичными маршруты которые не требуют авторизации
