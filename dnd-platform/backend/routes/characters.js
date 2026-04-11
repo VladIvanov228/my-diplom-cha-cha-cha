@@ -92,16 +92,20 @@ router.get('/:id', async (req, res) => {
 
     const character = await pool.query(
       `SELECT c.*, 
+              cls.id as class_id,
+              r.id as race_id,
               json_agg(DISTINCT cs.*) FILTER (WHERE cs.id IS NOT NULL) as skills,
               json_agg(DISTINCT ce.*) FILTER (WHERE ce.id IS NOT NULL) as equipment,
               json_agg(DISTINCT sp.*) FILTER (WHERE sp.id IS NOT NULL) as spells
        FROM characters c
+       LEFT JOIN classes cls ON c.class = cls.name
+       LEFT JOIN races r ON c.race = r.name
        LEFT JOIN character_skills cs ON c.id = cs.character_id
        LEFT JOIN character_equipment ce ON c.id = ce.character_id
        LEFT JOIN character_spells csp ON c.id = csp.character_id
        LEFT JOIN spells sp ON csp.spell_id = sp.id
        WHERE c.id = $1 AND c.user_id = $2
-       GROUP BY c.id`,
+       GROUP BY c.id, cls.id, r.id`,
       [id, userId]
     );
 

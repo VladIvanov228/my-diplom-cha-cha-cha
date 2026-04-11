@@ -1,3 +1,4 @@
+// backend/routes/auth.js
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -36,7 +37,7 @@ router.post('/register', async (req, res) => {
       [email, username, hashedPassword, 'player']
     );
 
-    // Генерируем JWT токен с полными данными пользователя
+    // Генерируем JWT токен с использованием времени жизни из .env или по умолчанию 7d
     const token = jwt.sign(
       {
         userId: newUser.rows[0].id,
@@ -46,7 +47,7 @@ router.post('/register', async (req, res) => {
         role: newUser.rows[0].role
       },
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: process.env.JWT_EXPIRES || '7d' } // Используем из .env или 7 дней
     );
 
     res.status(201).json({
@@ -84,7 +85,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
 
-    // Генерируем JWT токен с полными данными пользователя
+    // Генерируем JWT токен с использованием времени жизни из .env
     const token = jwt.sign(
       {
         userId: user.rows[0].id,
@@ -94,7 +95,7 @@ router.post('/login', async (req, res) => {
         role: user.rows[0].role
       },
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: process.env.JWT_EXPIRES || '7d' }
     );
 
     res.json({

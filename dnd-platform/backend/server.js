@@ -17,6 +17,15 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 
+// Добавьте это ПОСЛЕ app.use(express.json()) и ДО маршрутов
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log('Body:', req.body);
+  }
+  next();
+});
+
 // Database connection
 const { pool } = require('./db');
 
@@ -165,19 +174,14 @@ app.get('/', (req, res) => {
 });
 
 // Routes with authentication
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/characters', authMiddleware, require('./routes/characters'));
-app.use('/api/campaigns', authMiddleware, require('./routes/campaigns'));
-app.use('/api/spells', require('./routes/spells'));
-app.use('/api/monsters', require('./routes/monsters'));
-app.use('/api/maps', authMiddleware, require('./routes/maps'));
-
-app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use('/api/auth', require('./routes/auth')); // Публичные маршруты аутентификации
+app.use('/api/characters', authMiddleware, require('./routes/characters')); // Защищенные маршруты персонажей
+app.use('/api', authMiddleware, require('./routes/equipment')); // Защищенные
+app.use('/api/campaigns', authMiddleware, require('./routes/campaigns')); // Защищенные
+app.use('/api/spells', require('./routes/spells')); // Публичные
+app.use('/api/monsters', require('./routes/monsters')); // Публичные
+app.use('/api/maps', authMiddleware, require('./routes/maps')); // Защищенные
+app.use('/api/skills', authMiddleware, require('./routes/skills'));  // Добавляем skills
 // Socket.io для реального времени
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);

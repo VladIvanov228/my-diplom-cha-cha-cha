@@ -142,6 +142,39 @@
                 </small>
               </div>
               
+              <!-- Секция выбора стартового снаряжения -->
+              <div class="form-section equipment-option" v-if="characterData.class">
+                <h3><i class="pi pi-box"></i> Стартовое снаряжение</h3>
+                <div class="field-checkbox">
+                  <Checkbox
+                    id="addStartingEquipment"
+                    v-model="addStartingEquipment"
+                    :binary="true"
+                  />
+                  <label for="addStartingEquipment"> Добавить стартовый набор класса</label>
+                </div>
+
+                <!-- Превью стартового снаряжения -->
+                <div v-if="addStartingEquipment && startingEquipmentPreview.length > 0" class="starting-equipment-preview">
+                  <h4>Предметы, которые будут добавлены:</h4>
+                  <ul>
+                    <li v-for="item in startingEquipmentPreview" :key="item.name">
+                      <i :class="getItemIcon(item.type)"></i>
+                      <strong>{{ item.name }}</strong>
+                      <span v-if="item.quantity > 1"> x{{ item.quantity }}</span>
+                      <span v-if="item.damage"> ({{ item.damage }} {{ item.damage_type }})</span>
+                      <span v-if="item.armor_class_bonus"> (AC +{{ item.armor_class_bonus }})</span>
+                      <small class="item-weight">{{ item.weight || 0 }} фнт.</small>
+                    </li>
+                  </ul>
+                  <p class="currency-note">
+                    <i class="pi pi-star"></i> Стартовая валюта:
+                    {{ CLASS_STARTING_CURRENCY[characterData.class]?.gold || 0 }} зм,
+                    {{ CLASS_STARTING_CURRENCY[characterData.class]?.silver || 0 }} см
+                  </p>
+                </div>
+              </div>
+              
               <div class="form-field">
                 <label for="race" class="required">
                   <i class="pi pi-users"></i> Раса
@@ -188,6 +221,37 @@
                 </small>
               </div>
               
+              <!-- Блок расового навыка -->
+              <div v-if="selectedRace && racePassiveSkill" class="form-section race-skill-section">
+                <h3><i class="pi pi-users"></i> Расовый навык</h3>
+                <SkillDetail 
+                  :skill="racePassiveSkill"
+                  :is-race-skill="true"
+                />
+              </div>
+
+              <!-- Блок классовых навыков -->
+              <div v-if="selectedClass && availableClassSkills.length > 0" class="form-section class-skills-section">
+                <h3><i class="pi pi-briefcase"></i> Доступные навыки класса</h3>
+                <div class="skills-list">
+                  <div 
+                    v-for="skill in availableClassSkills" 
+                    :key="skill.id"
+                    class="skill-select-item"
+                  >
+                    <ActiveSkillCard 
+                      :skill="skill"
+                      :is-loading="false"
+                      @use="selectSkill"
+                    />
+                  </div>
+                </div>
+                <small class="field-hint">
+                  <i class="pi pi-info-circle"></i>
+                  Навыки будут доступны после создания персонажа
+                </small>
+              </div>
+              
               <div class="form-field">
                 <label for="background">
                   <i class="pi pi-history"></i> Предыстория
@@ -210,14 +274,7 @@
                   :options="alignments"
                   placeholder="Выберите мировоззрение"
                   class="w-full"
-                >
-                  <template #option="slotProps">
-                    <div class="alignment-option">
-                      <i class="pi pi-compass mr-2"></i>
-                      <span>{{ slotProps.option }}</span>
-                    </div>
-                  </template>
-                </Dropdown>
+                />
               </div>
             </div>
             
@@ -534,15 +591,21 @@
 import { ref, computed, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useCharactersStore } from '@/stores/characters'
+import { useEquipmentStore } from '@/stores/equipment'
 import { useAuthStore } from '@/stores/auth'
+import { useSkillsStore } from '@/stores/skills'
+import { CLASS_STARTING_EQUIPMENT, CLASS_STARTING_CURRENCY } from '@/types/character'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Dropdown from 'primevue/dropdown'
 import Textarea from 'primevue/textarea'
+import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
 import ProgressSpinner from 'primevue/progressspinner'
 import AbilityScoreDistribution from './creation/AbilityScoreDistribution.vue'
+import SkillDetail from './SkillDetail.vue'
+import ActiveSkillCard from './ActiveSkillCard.vue'
 
 interface Props {
   visible: boolean
@@ -553,9 +616,11 @@ const emit = defineEmits(['update:visible', 'character-created'])
 
 const toast = useToast()
 const charactersStore = useCharactersStore()
+const equipmentStore = useEquipmentStore()
 const authStore = useAuthStore()
+const skillsStore = useSkillsStore()
 
-// Данные формы
+// Данные формы - объявляем ПЕРВЫМИ
 const characterData = ref({
   name: '',
   level: 1,
@@ -587,6 +652,11 @@ const apiErrorDetails = ref<string | null>(null)
 const submitting = ref(false)
 const abilityScoresValid = ref(false)
 const formSubmitted = ref(false)
+const addStartingEquipment = ref(true)
+
+// Вычисляемые свойства для навыков
+const racePassiveSkill = computed(() => skillsStore.racePassive)
+const availableClassSkills = computed(() => skillsStore.classSkills)
 
 // Списки опций
 const alignments = ref([
@@ -642,7 +712,36 @@ const abilityNames: Record<string, string> = {
   charisma: 'Харизма'
 }
 
-// Диагностика
+// Стартовое снаряжение
+const startingEquipmentPreview = computed(() => {
+  if (!characterData.value.class || !addStartingEquipment.value) return []
+  const classKey = characterData.value.class
+  return CLASS_STARTING_EQUIPMENT[classKey as keyof typeof CLASS_STARTING_EQUIPMENT] || []
+})
+
+// Функции
+const getItemIcon = (type: string) => {
+  switch (type) {
+    case 'weapon': return 'pi pi-bolt'
+    case 'armor':
+    case 'shield': return 'pi pi-shield'
+    case 'tool': return 'pi pi-wrench'
+    case 'container': return 'pi pi-folder'
+    case 'pack': return 'pi pi-box'
+    case 'ammunition': return 'pi pi-arrow-right'
+    default: return 'pi pi-circle'
+  }
+}
+
+const selectSkill = (skill: any) => {
+  toast.add({
+    severity: 'info',
+    summary: skill.name,
+    detail: 'Навык будет изучен после создания персонажа',
+    life: 3000
+  })
+}
+
 const runDiagnostics = async () => {
   console.log('=== ДИАГНОСТИКА СОЗДАНИЯ ПЕРСОНАЖА ===')
   console.log('1. Данные формы:', characterData.value)
@@ -670,7 +769,6 @@ const showHelp = () => {
   })
 }
 
-// Проверка токена
 const checkToken = () => {
   const token = localStorage.getItem('token')
   if (!token) {
@@ -699,7 +797,6 @@ const checkToken = () => {
   return true
 }
 
-// Загрузка данных классов и рас
 const loadData = async () => {
   if (!checkToken()) return
   
@@ -711,7 +808,6 @@ const loadData = async () => {
   try {
     console.log('🔄 Загрузка данных для создания персонажа...')
     
-    // Загружаем последовательно
     await charactersStore.fetchClasses()
     console.log('✅ Классы загружены:', charactersStore.classes.length)
     
@@ -748,7 +844,6 @@ const loadData = async () => {
   }
 }
 
-// Форматирование бонусов характеристик
 const formatAbilityBonuses = (bonuses: any) => {
   if (!bonuses) return ''
   const parts = []
@@ -762,7 +857,6 @@ const formatAbilityBonuses = (bonuses: any) => {
   return parts.join(', ')
 }
 
-// Характеристики
 const getModifier = (score: number) => {
   return Math.floor((score - 10) / 2)
 }
@@ -789,7 +883,6 @@ const getFinalScore = (ability: string) => {
   return final > 20 ? 20 : final
 }
 
-// Расчет производных характеристик
 const calculatedHitPoints = computed(() => {
   const conScore = getFinalScore('constitution')
   const conMod = getModifier(conScore)
@@ -812,7 +905,6 @@ const calculatedSpeed = computed(() => {
   return selectedRace.value?.speed || 30
 })
 
-// Пересчёт характеристик
 const recalculateHitPoints = () => {
   toast.add({
     severity: 'info',
@@ -831,12 +923,10 @@ const recalculateArmorClass = () => {
   })
 }
 
-// Обработчик валидации характеристик
 const onAbilityScoresValid = (valid: boolean) => {
   abilityScoresValid.value = valid
 }
 
-// Проверка возможности создания персонажа
 const canCreateCharacter = computed(() => {
   return characterData.value.name && 
          characterData.value.class && 
@@ -847,7 +937,6 @@ const canCreateCharacter = computed(() => {
          !submitting.value
 })
 
-// Создание персонажа
 const submitCharacter = async () => {
   formSubmitted.value = true
   
@@ -865,28 +954,31 @@ const submitCharacter = async () => {
   
   submitting.value = true
   try {
-    // Применяем расовые бонусы
     const finalScores: any = {}
     abilities.forEach(ability => {
       finalScores[ability.key] = getFinalScore(ability.key)
     })
 
-    const character = {
+    const characterDataPayload = {
       ...characterData.value,
       ...finalScores,
       hit_points: calculatedHitPoints.value,
       armor_class: calculatedArmorClass.value,
       proficiency_bonus: calculatedProficiencyBonus.value,
       speed: calculatedSpeed.value,
-      experience_points: characterData.value.experience_points || 0,
       inspiration: false,
       hit_dice: selectedClass.value?.hit_dice || 'd8'
     }
 
-    console.log('Создание персонажа:', character)
-    
-    const newCharacter = await charactersStore.createCharacter(character)
-    
+    console.log('Создание персонажа с инвентарем:', characterDataPayload)
+
+    const newCharacter = await charactersStore.createCharacterWithEquipment(
+      characterDataPayload,
+      {
+        addStandardPack: addStartingEquipment.value,
+      }
+    )
+
     toast.add({
       severity: 'success',
       summary: 'Успешно!',
@@ -897,17 +989,15 @@ const submitCharacter = async () => {
     emit('character-created', newCharacter)
     visible.value = false
     resetForm()
-    
+
   } catch (error: any) {
     console.error('Ошибка создания персонажа:', error)
-    
     let errorMessage = error.message || 'Не удалось создать персонажа'
     if (error.response?.status === 403) {
       errorMessage = 'Доступ запрещен. Войдите заново.'
     } else if (error.response?.status === 401) {
       errorMessage = 'Не авторизован. Войдите заново.'
     }
-    
     toast.add({
       severity: 'error',
       summary: 'Ошибка',
@@ -919,7 +1009,6 @@ const submitCharacter = async () => {
   }
 }
 
-// Сброс формы
 const resetForm = () => {
   characterData.value = {
     name: '',
@@ -949,6 +1038,8 @@ const resetForm = () => {
   dataLoadErrorMessage.value = null
   apiErrorDetails.value = null
   formSubmitted.value = false
+  addStartingEquipment.value = true
+  skillsStore.reset()
   
   toast.add({
     severity: 'info',
@@ -957,6 +1048,29 @@ const resetForm = () => {
     life: 3000
   })
 }
+
+// Watchers для навыков
+watch(() => characterData.value.race, async (newRace) => {
+  if (newRace && selectedRace.value) {
+    await skillsStore.fetchRacePassiveSkill(selectedRace.value.id)
+  } else {
+    skillsStore.racePassive = null
+  }
+})
+
+watch(() => characterData.value.class, async (newClass) => {
+  if (newClass && selectedClass.value) {
+    await skillsStore.fetchClassSkills(selectedClass.value.id, characterData.value.level)
+  } else {
+    skillsStore.classSkills = []
+  }
+})
+
+watch(() => characterData.value.level, async (newLevel) => {
+  if (characterData.value.class && selectedClass.value) {
+    await skillsStore.fetchClassSkills(selectedClass.value.id, newLevel)
+  }
+})
 
 // Видимость диалога
 const visible = computed({
@@ -1504,6 +1618,90 @@ watch(visible, (newVal) => {
   margin-right: 8px;
 }
 
+/* Стили для стартового снаряжения */
+.equipment-option {
+  background: #f0fdf4;
+  border-color: #86efac;
+  margin-top: 16px;
+}
+
+.field-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 8px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.field-checkbox label {
+  font-weight: 500;
+  color: #166534;
+}
+
+.starting-equipment-preview {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  margin-top: 16px;
+}
+
+.starting-equipment-preview h4 {
+  margin: 0 0 12px 0;
+  color: #166534;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.starting-equipment-preview ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.starting-equipment-preview li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.starting-equipment-preview li:last-child {
+  border-bottom: none;
+}
+
+.starting-equipment-preview li i {
+  color: #059669;
+  width: 20px;
+}
+
+.starting-equipment-preview li strong {
+  color: #1f2937;
+  min-width: 120px;
+}
+
+.starting-equipment-preview li .item-weight {
+  margin-left: auto;
+  color: #6b7280;
+}
+
+.currency-note {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+  color: #166534;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
 /* Проверка требований */
 .requirements-check {
   background: #f9fafb;
@@ -1692,5 +1890,53 @@ watch(visible, (newVal) => {
   .preview-stats {
     grid-template-columns: 1fr;
   }
+}
+
+/* Стили для навыков в форме создания */
+.race-skill-section,
+.class-skills-section {
+  margin-top: 20px;
+}
+
+.race-skill-section {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 100%);
+  border-left: 4px solid #3b82f6;
+}
+
+.class-skills-section {
+  background: #faf5ff;
+  border-left: 4px solid #8b5cf6;
+}
+
+.skills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.skill-select-item {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.skill-select-item:hover {
+  transform: translateX(4px);
+}
+
+.skills-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.skills-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.skills-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
 }
 </style>
