@@ -5,26 +5,32 @@ module.exports = function(req, res, next) {
   console.log('\n=== AUTH MIDDLEWARE ===')
   console.log('Path:', req.path)
   console.log('Method:', req.method)
-  console.log('Authorization header:', req.headers['authorization'])
+  console.log('Authorization header:', req.headers['authorization'] ? 'Present' : 'Missing')
   
   // Публичные маршруты
   const publicRoutes = [
     '/api/auth/login',
-    '/api/auth/register', 
-    '/api/characters/data/classes',
-    '/api/characters/data/races'
+    '/api/auth/register',
+    '/api/spells',
+    '/api/monsters',
+    '/api/skills'
   ]
   
-  // // Также делаем публичными маршруты которые не требуют авторизации
-  if (req.path.startsWith('/api/characters/data/')) {
-    console.log('Public data route, skipping auth')
+  // Проверяем, является ли маршрут публичным
+  // 1. Точное совпадение с publicRoutes
+  if (publicRoutes.includes(req.path)) {
+    console.log('✅ Public route (exact match), skipping auth')
     return next()
   }
   
-  if (publicRoutes.includes(req.path)) {
-    console.log('Public route, skipping auth')
+  // 2. Любой маршрут, начинающийся с /api/characters/data/ (для классов, рас, фонов)
+  if (req.path.startsWith('/api/characters/data/')) {
+    console.log('✅ Public data route, skipping auth')
     return next()
   }
+
+  // 3. Для отладки - выводим все непубличные маршруты
+  console.log('🔒 Protected route - checking token...')
 
   const authHeader = req.headers['authorization']
   
@@ -47,10 +53,9 @@ module.exports = function(req, res, next) {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key')
-    console.log('✅ Token verified, decoded:', decoded)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    console.log('✅ Token verified, userId:', decoded.userId || decoded.id)
     
-    // Важное исправление: создаем единую структуру пользователя
     const userId = decoded.userId || decoded.id
     
     if (!userId) {
@@ -64,10 +69,8 @@ module.exports = function(req, res, next) {
     req.user = {
       ...decoded,
       userId: userId,
-      id: userId // Для совместимости с кодом, который использует req.user.id
+      id: userId
     }
-    
-    console.log('✅ User set:', { userId: req.user.userId, id: req.user.id })
     
     next()
   } catch (error) {
@@ -90,3 +93,5 @@ module.exports = function(req, res, next) {
     })
   }
 }
+
+module.exports = authenticateToken  // Экспортируем функцию напрямую

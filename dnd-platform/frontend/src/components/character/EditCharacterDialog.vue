@@ -62,6 +62,7 @@
                   decrementButtonClass="p-button-secondary"
                   incrementButtonClass="p-button-secondary"
                   class="w-full"
+                  @update:modelValue="onLevelChange"
                 />
               </div>
               
@@ -70,8 +71,6 @@
                 <InputText 
                   id="class"
                   v-model="characterData.class"
-                  :class="{ 'p-invalid': !characterData.class && formSubmitted }"
-                  placeholder="Класс персонажа"
                   class="w-full"
                   disabled
                 />
@@ -83,8 +82,6 @@
                 <InputText 
                   id="race"
                   v-model="characterData.race"
-                  :class="{ 'p-invalid': !characterData.race && formSubmitted }"
-                  placeholder="Раса персонажа"
                   class="w-full"
                   disabled
                 />
@@ -177,182 +174,136 @@
             </div>
           </div>
           
-          <!-- Центральная колонка: Характеристики и навыки -->
-          <div class="form-column abilities-skills">
-            <div class="form-section">
-              <h3>Характеристики</h3>
-              <div class="abilities-grid">
-                <div v-for="ability in abilities" :key="ability.key" class="ability-item">
-                  <div class="ability-header">
-                    <span class="ability-name">{{ abilityNames[ability.key] }}</span>
-                    <span class="ability-modifier">
-                      {{ getModifier(characterData[ability.key]) >= 0 ? '+' : '' }}{{ getModifier(characterData[ability.key]) }}
-                    </span>
+          <!-- Правая колонка: Вкладки -->
+          <div class="form-column tabs-column">
+            <TabView>
+              <TabPanel header="Характеристики">
+                <div class="form-section">
+                  <h3>Характеристики</h3>
+                  <div class="abilities-grid">
+                    <div v-for="ability in abilities" :key="ability.key" class="ability-item">
+                      <div class="ability-header">
+                        <span class="ability-name">{{ abilityNames[ability.key] }}</span>
+                        <span class="ability-modifier">
+                          {{ getModifier(characterData[ability.key]) >= 0 ? '+' : '' }}{{ getModifier(characterData[ability.key]) }}
+                        </span>
+                      </div>
+                      <InputNumber 
+                        v-model="characterData[ability.key]"
+                        :min="1"
+                        :max="30"
+                        :step="1"
+                        showButtons
+                        buttonLayout="horizontal"
+                        decrementButtonClass="p-button-secondary"
+                        incrementButtonClass="p-button-secondary"
+                        class="w-full"
+                        @update:modelValue="updateDerivedStats"
+                      />
+                    </div>
                   </div>
-                  <InputNumber 
-                    v-model="characterData[ability.key]"
-                    :min="1"
-                    :max="30"
-                    :step="1"
-                    showButtons
-                    buttonLayout="horizontal"
-                    decrementButtonClass="p-button-secondary"
-                    incrementButtonClass="p-button-secondary"
-                    class="w-full"
-                    @update:modelValue="updateDerivedStats"
-                  />
-                </div>
-              </div>
-              
-              <div class="derived-stats">
-                <div class="stat-item">
-                  <label>Хит-поинты</label>
-                  <InputNumber 
-                    v-model="characterData.hit_points"
-                    :min="1"
-                    :step="1"
-                    class="w-full"
-                  />
-                </div>
-                <div class="stat-item">
-                  <label>Класс брони</label>
-                  <InputNumber 
-                    v-model="characterData.armor_class"
-                    :min="1"
-                    :step="1"
-                    class="w-full"
-                  />
-                </div>
-                <div class="stat-item">
-                  <label>Бонус мастерства</label>
-                  <InputNumber 
-                    v-model="characterData.proficiency_bonus"
-                    :min="2"
-                    :max="6"
-                    :step="1"
-                    class="w-full"
-                  />
-                </div>
-                <div class="stat-item">
-                  <label>Скорость</label>
-                  <InputNumber 
-                    v-model="characterData.speed"
-                    :min="5"
-                    :step="5"
-                    class="w-full"
-                  />
-                  <small class="field-hint">фт.</small>
-                </div>
-              </div>
-            </div>
-            
-            <div class="form-section">
-              <h3>Особенности и заметки</h3>
-              
-              <div class="form-field">
-                <label for="features">Особенности</label>
-                <Textarea 
-                  id="features"
-                  v-model="characterData.features"
-                  rows="4"
-                  class="w-full"
-                  placeholder="Особенности класса, расы, таланты и т.д."
-                />
-              </div>
-              
-              <div class="form-field">
-                <label for="notes">Заметки</label>
-                <Textarea 
-                  id="notes"
-                  v-model="characterData.notes"
-                  rows="4"
-                  class="w-full"
-                  placeholder="Дополнительные заметки о персонаже"
-                />
-              </div>
-              
-              <div class="form-field">
-                <label for="inspiration">
-                  <Checkbox 
-                    id="inspiration"
-                    v-model="characterData.inspiration"
-                    :binary="true"
-                  />
-                  <span style="margin-left: 8px;">Вдохновение</span>
-                </label>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Правая колонка: Сводка и действия -->
-          <div class="form-column summary-actions">
-            <div class="form-section">
-              <h3>Сводка изменений</h3>
-              
-              <div class="changes-summary">
-                <div class="change-item" v-for="change in changes" :key="change.field">
-                  <strong>{{ change.label }}:</strong>
-                  <span class="old-value">{{ change.oldValue }}</span>
-                  <i class="pi pi-arrow-right"></i>
-                  <span class="new-value">{{ change.newValue }}</span>
+                  
+                  <div class="derived-stats">
+                    <div class="stat-item">
+                      <label>Хит-поинты</label>
+                      <InputNumber 
+                        v-model="characterData.hit_points"
+                        :min="1"
+                        :step="1"
+                        class="w-full"
+                      />
+                    </div>
+                    <div class="stat-item">
+                      <label>Класс брони</label>
+                      <InputNumber 
+                        v-model="characterData.armor_class"
+                        :min="1"
+                        :step="1"
+                        class="w-full"
+                      />
+                    </div>
+                    <div class="stat-item">
+                      <label>Бонус мастерства</label>
+                      <InputNumber 
+                        v-model="characterData.proficiency_bonus"
+                        :min="2"
+                        :max="6"
+                        :step="1"
+                        class="w-full"
+                      />
+                    </div>
+                    <div class="stat-item">
+                      <label>Скорость</label>
+                      <InputNumber 
+                        v-model="characterData.speed"
+                        :min="5"
+                        :step="5"
+                        class="w-full"
+                      />
+                      <small class="field-hint">фт.</small>
+                    </div>
+                  </div>
                 </div>
                 
-                <div v-if="changes.length === 0" class="no-changes">
-                  <i class="pi pi-info-circle"></i>
-                  <span>Изменений нет</span>
+                <div class="form-section">
+                  <h3>Особенности и заметки</h3>
+                  
+                  <div class="form-field">
+                    <label for="features">Особенности</label>
+                    <Textarea 
+                      id="features"
+                      v-model="characterData.features"
+                      rows="4"
+                      class="w-full"
+                      placeholder="Особенности класса, расы, таланты и т.д."
+                    />
+                  </div>
+                  
+                  <div class="form-field">
+                    <label for="notes">Заметки</label>
+                    <Textarea 
+                      id="notes"
+                      v-model="characterData.notes"
+                      rows="4"
+                      class="w-full"
+                      placeholder="Дополнительные заметки о персонаже"
+                    />
+                  </div>
+                  
+                  <div class="form-field">
+                    <label for="inspiration">
+                      <Checkbox 
+                        id="inspiration"
+                        v-model="characterData.inspiration"
+                        :binary="true"
+                      />
+                      <span style="margin-left: 8px;">Вдохновение</span>
+                    </label>
+                  </div>
                 </div>
-              </div>
-            </div>
-            
-            <div class="form-section">
-              <h3>Действия</h3>
+              </TabPanel>
               
-              <div class="quick-actions">
-                <Button 
-                  label="Пересчитать HP" 
-                  icon="pi pi-heart"
-                  severity="secondary"
-                  @click="recalculateHitPoints"
-                  class="w-full mb-2"
-                />
-                <Button 
-                  label="Пересчитать AC" 
-                  icon="pi pi-shield"
-                  severity="secondary"
-                  @click="recalculateArmorClass"
-                  class="w-full mb-2"
-                />
-                <Button 
-                  label="Сбросить изменения" 
-                  icon="pi pi-refresh"
-                  severity="warning"
-                  @click="resetToOriginal"
-                  class="w-full"
-                />
-              </div>
-              
-              <div class="validation-messages">
-                <div v-if="!characterData.name && formSubmitted" class="validation-error">
-                  <i class="pi pi-exclamation-circle"></i>
-                  <span>Укажите имя персонажа</span>
+              <TabPanel header="Навыки">
+                <!-- Проверяем, что есть все необходимые данные -->
+                <div v-if="characterData.id && characterData.race_id && characterData.class_id" class="skills-container">
+                  <SkillsPanel 
+                    :character-id="characterData.id"
+                    :race-id="characterData.race_id"
+                    :class-id="characterData.class_id"
+                    :character-level="characterData.level"
+                    :show-learn-button="true"
+                  />
                 </div>
-                <div v-if="saveError" class="validation-error">
-                  <i class="pi pi-exclamation-circle"></i>
-                  <span>{{ saveError }}</span>
+                <div v-else-if="loading" class="skills-loading">
+                  <i class="pi pi-spin pi-spinner"></i> Загрузка данных персонажа...
                 </div>
-              </div>
-              
-              <div class="form-actions">
-                <Button 
-                  label="Сохранить" 
-                  icon="pi pi-save"
-                  :loading="saving"
-                  :disabled="!hasChanges || saving"
-                  @click="saveCharacter"
-                  class="save-button w-full"
-                />
-              </div>
-            </div>
+                <div v-else class="skills-error">
+                  <i class="pi pi-exclamation-triangle"></i>
+                  <p>Не удалось загрузить навыки. Отсутствуют данные о расе или классе.</p>
+                  <small>race_id: {{ characterData.race_id }}, class_id: {{ characterData.class_id }}</small>
+                </div>
+              </TabPanel>
+            </TabView>
           </div>
         </div>
       </div>
@@ -392,6 +343,9 @@ import Textarea from 'primevue/textarea'
 import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
 import ProgressSpinner from 'primevue/progressspinner'
+import TabView from 'primevue/tabview'
+import TabPanel from 'primevue/tabpanel'
+import SkillsPanel from '@/components/character/SkillsPanel.vue'
 
 interface Props {
   visible: boolean
@@ -406,7 +360,35 @@ const charactersStore = useCharactersStore()
 
 // Данные
 const originalCharacter = ref<any>(null)
-const characterData = ref<any>({})
+const characterData = ref<any>({
+  id: null,
+  name: '',
+  level: 1,
+  class: '',
+  race: '',
+  class_id: null,
+  race_id: null,
+  background: '',
+  alignment: '',
+  experience_points: 0,
+  personality_traits: '',
+  ideals: '',
+  bonds: '',
+  flaws: '',
+  features: '',
+  notes: '',
+  inspiration: false,
+  strength: 10,
+  dexterity: 10,
+  constitution: 10,
+  intelligence: 10,
+  wisdom: 10,
+  charisma: 10,
+  hit_points: 10,
+  armor_class: 10,
+  proficiency_bonus: 2,
+  speed: 30
+})
 const loading = ref(false)
 const error = ref<string | null>(null)
 const saving = ref(false)
@@ -454,55 +436,8 @@ const hasChanges = computed(() => {
   return Object.keys(characterData.value).some(key => {
     const oldVal = originalCharacter.value[key]
     const newVal = characterData.value[key]
-    
-    // Сравниваем с учётом типов
     return String(oldVal) !== String(newVal)
   })
-})
-
-const changes = computed(() => {
-  if (!originalCharacter.value) return []
-  
-  const changesList: Array<{
-    field: string
-    label: string
-    oldValue: any
-    newValue: any
-  }> = []
-  
-  Object.keys(characterData.value).forEach(key => {
-    const oldVal = originalCharacter.value[key]
-    const newVal = characterData.value[key]
-    
-    if (String(oldVal) !== String(newVal)) {
-      let label = key
-      switch(key) {
-        case 'name': label = 'Имя'; break
-        case 'level': label = 'Уровень'; break
-        case 'background': label = 'Предыстория'; break
-        case 'alignment': label = 'Мировоззрение'; break
-        case 'experience_points': label = 'Опыт'; break
-        case 'hit_points': label = 'Хит-поинты'; break
-        case 'armor_class': label = 'Класс брони'; break
-        case 'proficiency_bonus': label = 'Бонус мастерства'; break
-        case 'strength': label = 'Сила'; break
-        case 'dexterity': label = 'Ловкость'; break
-        case 'constitution': label = 'Телосложение'; break
-        case 'intelligence': label = 'Интеллект'; break
-        case 'wisdom': label = 'Мудрость'; break
-        case 'charisma': label = 'Харизма'; break
-      }
-      
-      changesList.push({
-        field: key,
-        label,
-        oldValue: oldVal,
-        newValue: newVal
-      })
-    }
-  })
-  
-  return changesList
 })
 
 // Методы
@@ -515,18 +450,22 @@ const loadCharacter = async () => {
   try {
     console.log('Loading character ID:', props.characterId)
     
-    // Загружаем персонажа
     await charactersStore.fetchCharacter(props.characterId)
     
     if (!charactersStore.currentCharacter) {
       throw new Error('Персонаж не найден')
     }
     
-    // Сохраняем оригинал и копию для редактирования
     originalCharacter.value = { ...charactersStore.currentCharacter }
     characterData.value = { ...charactersStore.currentCharacter }
     
-    console.log('Character loaded:', characterData.value)
+    console.log('Character loaded:', {
+      id: characterData.value.id,
+      name: characterData.value.name,
+      race_id: characterData.value.race_id,
+      class_id: characterData.value.class_id,
+      level: characterData.value.level
+    })
     
   } catch (err: any) {
     console.error('Error loading character:', err)
@@ -536,140 +475,24 @@ const loadCharacter = async () => {
   }
 }
 
+const onLevelChange = () => {
+  // Обновляем бонус мастерства при изменении уровня
+  characterData.value.proficiency_bonus = 2 + Math.floor((characterData.value.level - 1) / 4)
+}
+
 const updateDerivedStats = () => {
-  // Автоматический пересчёт HP при изменении телосложения
   if (characterData.value.constitution !== originalCharacter.value?.constitution) {
     const conMod = getModifier(characterData.value.constitution)
     characterData.value.hit_points = 10 + conMod
   }
   
-  // Автоматический пересчёт AC при изменении ловкости
   if (characterData.value.dexterity !== originalCharacter.value?.dexterity) {
     const dexMod = getModifier(characterData.value.dexterity)
     characterData.value.armor_class = 10 + dexMod
   }
   
-  // Автоматический пересчёт бонуса мастерства при изменении уровня
   if (characterData.value.level !== originalCharacter.value?.level) {
     characterData.value.proficiency_bonus = 2 + Math.floor((characterData.value.level - 1) / 4)
-  }
-}
-
-const recalculateHitPoints = () => {
-  const conMod = getModifier(characterData.value.constitution)
-  const baseHP = 10 + conMod
-  characterData.value.hit_points = baseHP
-  toast.add({
-    severity: 'success',
-    summary: 'Хит-поинты пересчитаны',
-    detail: `Новое значение: ${baseHP}`,
-    life: 3000
-  })
-}
-
-const recalculateArmorClass = () => {
-  const dexMod = getModifier(characterData.value.dexterity)
-  const baseAC = 10 + dexMod
-  characterData.value.armor_class = baseAC
-  toast.add({
-    severity: 'success',
-    summary: 'Класс брони пересчитан',
-    detail: `Новое значение: ${baseAC}`,
-    life: 3000
-  })
-}
-
-const resetToOriginal = () => {
-  if (originalCharacter.value) {
-    characterData.value = { ...originalCharacter.value }
-    toast.add({
-      severity: 'info',
-      summary: 'Изменения сброшены',
-      detail: 'Все поля восстановлены к исходным значениям',
-      life: 3000
-    })
-  }
-}
-
-const saveCharacter = async () => {
-  formSubmitted.value = true
-  
-  if (!characterData.value.name) {
-    toast.add({
-      severity: 'error',
-      summary: 'Ошибка',
-      detail: 'Укажите имя персонажа',
-      life: 3000
-    })
-    return
-  }
-  
-  saving.value = true
-  saveError.value = null
-  
-  try {
-    // Подготавливаем данные для отправки
-    const updates: any = {}
-    
-    // Собираем только изменённые поля
-    Object.keys(characterData.value).forEach(key => {
-      if (originalCharacter.value && 
-          String(characterData.value[key]) !== String(originalCharacter.value[key])) {
-        updates[key] = characterData.value[key]
-      }
-    })
-    
-    // Убираем неизменяемые поля
-    delete updates.id
-    delete updates.user_id
-    delete updates.created_at
-    delete updates.updated_at
-    delete updates.class
-    delete updates.race
-    
-    console.log('Saving updates:', updates)
-    
-    if (Object.keys(updates).length === 0) {
-      toast.add({
-        severity: 'warn',
-        summary: 'Нет изменений',
-        detail: 'Нечего сохранять',
-        life: 3000
-      })
-      return
-    }
-    
-    // Отправляем обновление
-    const updatedCharacter = await charactersStore.updateCharacter(
-      props.characterId,
-      updates
-    )
-    
-    // Обновляем оригинал
-    originalCharacter.value = { ...updatedCharacter }
-    
-    toast.add({
-      severity: 'success',
-      summary: 'Успешно',
-      detail: `Персонаж "${characterData.value.name}" обновлён`,
-      life: 3000
-    })
-    
-    emit('character-updated', updatedCharacter)
-    visible.value = false
-    
-  } catch (err: any) {
-    console.error('Error saving character:', err)
-    saveError.value = err.message || 'Не удалось сохранить изменения'
-    
-    toast.add({
-      severity: 'error',
-      summary: 'Ошибка',
-      detail: saveError.value,
-      life: 3000
-    })
-  } finally {
-    saving.value = false
   }
 }
 
@@ -706,7 +529,35 @@ const deleteCharacter = async () => {
 
 const resetForm = () => {
   originalCharacter.value = null
-  characterData.value = {}
+  characterData.value = {
+    id: null,
+    name: '',
+    level: 1,
+    class: '',
+    race: '',
+    class_id: null,
+    race_id: null,
+    background: '',
+    alignment: '',
+    experience_points: 0,
+    personality_traits: '',
+    ideals: '',
+    bonds: '',
+    flaws: '',
+    features: '',
+    notes: '',
+    inspiration: false,
+    strength: 10,
+    dexterity: 10,
+    constitution: 10,
+    intelligence: 10,
+    wisdom: 10,
+    charisma: 10,
+    hit_points: 10,
+    armor_class: 10,
+    proficiency_bonus: 2,
+    speed: 30
+  }
   error.value = null
   saveError.value = null
   formSubmitted.value = false
@@ -792,7 +643,7 @@ watch(visible, (newVal) => {
 
 .form-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1.2fr;
   gap: 24px;
   max-height: 70vh;
   overflow-y: auto;
@@ -805,11 +656,20 @@ watch(visible, (newVal) => {
   gap: 24px;
 }
 
+.tabs-column {
+  overflow: visible;
+}
+
 .form-section {
   background: #f9fafb;
   padding: 20px;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
+  margin-bottom: 24px;
+}
+
+.form-section:last-child {
+  margin-bottom: 0;
 }
 
 .form-section h3 {
@@ -853,10 +713,6 @@ watch(visible, (newVal) => {
   width: 100%;
 }
 
-.w-full.mb-2 {
-  margin-bottom: 8px;
-}
-
 .p-invalid {
   border-color: #ef4444 !important;
 }
@@ -868,7 +724,7 @@ watch(visible, (newVal) => {
   display: block;
 }
 
-/* Стили для характеристик */
+/* Характеристики */
 .abilities-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -926,122 +782,57 @@ watch(visible, (newVal) => {
   color: #6b7280;
 }
 
-/* Стили для сводки изменений */
-.changes-summary {
-  background: white;
-  padding: 16px;
-  border-radius: 6px;
-  border: 1px solid #e5e7eb;
-  max-height: 200px;
-  overflow-y: auto;
+/* Навыки */
+.skills-container {
+  min-height: 300px;
 }
 
-.change-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.change-item:last-child {
-  border-bottom: none;
-}
-
-.change-item strong {
-  min-width: 120px;
-  color: #4b5563;
-  font-size: 0.875rem;
-}
-
-.old-value {
-  color: #9ca3af;
-  text-decoration: line-through;
-  font-size: 0.875rem;
-}
-
-.new-value {
-  color: #059669;
-  font-weight: 600;
-  font-size: 0.875rem;
-}
-
-.change-item i {
+.skills-loading,
+.skills-error {
+  text-align: center;
+  padding: 3rem;
   color: #6b7280;
-  font-size: 0.875rem;
 }
 
-.no-changes {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #6b7280;
-  font-style: italic;
-  padding: 12px 0;
-  justify-content: center;
+.skills-loading i,
+.skills-error i {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  display: block;
 }
 
-/* Быстрые действия */
-.quick-actions {
-  margin-bottom: 20px;
-}
-
-/* Валидация */
-.validation-messages {
-  margin: 16px 0;
-  padding: 12px;
-  background: #fef2f2;
-  border-radius: 6px;
-  border: 1px solid #fecaca;
-}
-
-.validation-error {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.skills-error {
   color: #dc2626;
-  font-size: 0.875rem;
-  margin-bottom: 4px;
 }
 
-.validation-error:last-child {
-  margin-bottom: 0;
+.skills-error small {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  display: block;
+  margin-top: 0.5rem;
 }
 
-.validation-error i {
-  font-size: 1rem;
+/* Вкладки */
+:deep(.p-tabview-panels) {
+  padding: 1rem 0;
 }
 
-/* Кнопки */
-.form-actions {
-  margin-top: 24px;
-}
-
-.save-button {
-  height: 48px;
-  font-size: 1.1rem;
+:deep(.p-tabview-nav) {
+  background: transparent;
 }
 
 /* Адаптивность */
 @media (max-width: 1200px) {
   .form-layout {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
   
-  .form-column.summary-actions {
-    grid-column: span 2;
+  .tabs-column {
+    grid-column: span 1;
   }
 }
 
 @media (max-width: 768px) {
-  .form-layout {
-    grid-template-columns: 1fr;
-  }
-  
-  .form-column.summary-actions {
-    grid-column: span 1;
-  }
-  
   .abilities-grid {
     grid-template-columns: 1fr;
   }

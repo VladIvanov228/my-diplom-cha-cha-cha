@@ -48,7 +48,7 @@ const router = createRouter({
     },
     {
       path: '/character/:id',
-      name: 'character',
+      name: 'cequeharacter',
       component: CharacterView,
       meta: { requiresAuth: true }
     },
@@ -62,6 +62,11 @@ const router = createRouter({
       path: '/debug-auth',
       name: 'debug-auth',
       component: () => import('@/views/DebugAuth.vue')
+    },
+    {
+      path: '/character/equipment',
+      name: 'equipment',
+      component: () => import('@/components/character/InventoryManager.vue')
     }
   ]
 })
