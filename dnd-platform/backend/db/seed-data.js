@@ -336,6 +336,452 @@ async function seedData() {
 
 console.log('✨ Skills seeded successfully!');
 
+// ============================================
+// 8. НАПОЛНЕНИЕ ШАБЛОНОВ ВРАГОВ
+// ============================================
+console.log('👾 Seeding enemy templates...');
+
+const enemies = [
+  // ГУМАНОИДЫ
+  {
+    name: 'Бандит', type: 'humanoid', size: 'medium', alignment: 'neutral evil',
+    armor_class: 12, hit_points: 11, hit_dice: '2d8+2', speed: 30,
+    strength: 11, dexterity: 12, constitution: 12, intelligence: 10, wisdom: 10, charisma: 10,
+    skills: '{}', senses: 'passive Perception 10', languages: 'Common',
+    challenge_rating: '1/8', xp: 25,
+    actions: '[{"name":"Scimitar","type":"melee_weapon","hit_bonus":3,"damage":"1d6+1","damage_type":"slashing","reach":5},{"name":"Light Crossbow","type":"ranged_weapon","hit_bonus":3,"damage":"1d8+1","damage_type":"piercing","range":"80/320"}]',
+    special_abilities: '[]'
+  },
+  {
+    name: 'Культист', type: 'humanoid', size: 'medium', alignment: 'neutral evil',
+    armor_class: 12, hit_points: 9, hit_dice: '2d8', speed: 30,
+    strength: 11, dexterity: 12, constitution: 10, intelligence: 10, wisdom: 11, charisma: 10,
+    skills: '{"deception":2,"religion":2}', senses: 'passive Perception 10', languages: 'Common',
+    challenge_rating: '1/8', xp: 25,
+    actions: '[{"name":"Scimitar","type":"melee_weapon","hit_bonus":3,"damage":"1d6+1","damage_type":"slashing","reach":5}]',
+    special_abilities: '[{"name":"Dark Devotion","description":"The cultist has advantage on saving throws against being charmed or frightened.","passive":true}]'
+  },
+  {
+    name: 'Стражник', type: 'humanoid', size: 'medium', alignment: 'lawful neutral',
+    armor_class: 16, hit_points: 11, hit_dice: '2d8+2', speed: 30,
+    strength: 13, dexterity: 12, constitution: 12, intelligence: 10, wisdom: 11, charisma: 10,
+    skills: '{"perception":2}', senses: 'passive Perception 12', languages: 'Common',
+    challenge_rating: '1/8', xp: 25,
+    actions: '[{"name":"Spear","type":"melee_weapon","hit_bonus":3,"damage":"1d6+1","damage_type":"piercing","reach":5}]',
+    special_abilities: '[]'
+  },
+  {
+    name: 'Ассасин', type: 'humanoid', size: 'medium', alignment: 'neutral evil',
+    armor_class: 15, hit_points: 78, hit_dice: '12d8+24', speed: 30,
+    strength: 11, dexterity: 16, constitution: 14, intelligence: 13, wisdom: 11, charisma: 10,
+    skills: '{"acrobatics":6,"deception":3,"perception":3,"stealth":9}', senses: 'passive Perception 13', languages: 'Thieves cant, Common',
+    challenge_rating: '8', xp: 3900,
+    actions: '[{"name":"Shortsword","type":"melee_weapon","hit_bonus":6,"damage":"1d6+3","damage_type":"piercing","reach":5},{"name":"Light Crossbow","type":"ranged_weapon","hit_bonus":6,"damage":"1d8+3","damage_type":"piercing","range":"80/320"}]',
+    special_abilities: '[{"name":"Assassinate","description":"During its first turn, the assassin has advantage on attack rolls against any creature that hasn\'t taken a turn. Any hit the assassin scores against a surprised creature is a critical hit.","passive":true},{"name":"Sneak Attack","description":"Once per turn, the assassin deals an extra 14 (4d6) damage when it hits a target with a weapon attack and has advantage on the attack roll.","passive":true}]'
+  },
+  {
+    name: 'Вор', type: 'humanoid', size: 'medium', alignment: 'any non-good',
+    armor_class: 12, hit_points: 10, hit_dice: '3d8-3', speed: 30,
+    strength: 9, dexterity: 14, constitution: 9, intelligence: 10, wisdom: 12, charisma: 11,
+    skills: '{"stealth":4,"sleight_of_hand":4,"perception":3}', senses: 'passive Perception 13', languages: 'Common, Thieves cant',
+    challenge_rating: '1/4', xp: 50,
+    actions: '[{"name":"Dagger","type":"melee_weapon","hit_bonus":4,"damage":"1d4+2","damage_type":"piercing","reach":5}]',
+    special_abilities: '[{"name":"Cunning Action","description":"The thug can use a bonus action to Dash, Disengage, or Hide.","passive":true}]'
+  },
+
+  // ЗВЕРИ
+  {
+    name: 'Гигантская крыса', type: 'beast', size: 'small', alignment: 'unaligned',
+    armor_class: 12, hit_points: 7, hit_dice: '2d6', speed: 30,
+    strength: 7, dexterity: 15, constitution: 11, intelligence: 2, wisdom: 10, charisma: 4,
+    skills: '{"perception":2}', senses: 'darkvision 60 ft., passive Perception 12', languages: '',
+    challenge_rating: '1/8', xp: 25,
+    actions: '[{"name":"Bite","type":"melee_weapon","hit_bonus":4,"damage":"1d4+2","damage_type":"piercing","reach":5}]',
+    special_abilities: '[{"name":"Keen Smell","description":"The rat has advantage on Wisdom (Perception) checks that rely on smell.","passive":true},{"name":"Pack Tactics","description":"The rat has advantage on an attack roll against a creature if at least one of the rat\'s allies is within 5 feet.","passive":true}]'
+  },
+  {
+    name: 'Волк', type: 'beast', size: 'medium', alignment: 'unaligned',
+    armor_class: 13, hit_points: 11, hit_dice: '2d8+2', speed: 40,
+    strength: 12, dexterity: 15, constitution: 12, intelligence: 3, wisdom: 12, charisma: 6,
+    skills: '{"perception":3,"stealth":4}', senses: 'passive Perception 13', languages: '',
+    challenge_rating: '1/4', xp: 50,
+    actions: '[{"name":"Bite","type":"melee_weapon","hit_bonus":4,"damage":"2d4+2","damage_type":"piercing","reach":5}]',
+    special_abilities: '[{"name":"Keen Hearing and Smell","description":"The wolf has advantage on Wisdom (Perception) checks that rely on hearing or smell.","passive":true},{"name":"Pack Tactics","description":"The wolf has advantage on attack rolls against a creature if at least one ally is within 5 feet.","passive":true}]'
+  },
+  {
+    name: 'Медведь', type: 'beast', size: 'large', alignment: 'unaligned',
+    armor_class: 11, hit_points: 34, hit_dice: '4d10+12', speed: 40,
+    strength: 19, dexterity: 10, constitution: 16, intelligence: 2, wisdom: 13, charisma: 7,
+    skills: '{"perception":3}', senses: 'passive Perception 13', languages: '',
+    challenge_rating: '1', xp: 200,
+    actions: '[{"name":"Bite","type":"melee_weapon","hit_bonus":5,"damage":"1d8+4","damage_type":"piercing","reach":5},{"name":"Claws","type":"melee_weapon","hit_bonus":5,"damage":"2d6+4","damage_type":"slashing","reach":5}]',
+    special_abilities: '[{"name":"Keen Smell","description":"The bear has advantage on Wisdom (Perception) checks that rely on smell.","passive":true}]'
+  },
+  {
+    name: 'Гигантский паук', type: 'beast', size: 'large', alignment: 'unaligned',
+    armor_class: 14, hit_points: 26, hit_dice: '4d10+4', speed: 30,
+    strength: 14, dexterity: 16, constitution: 12, intelligence: 2, wisdom: 11, charisma: 4,
+    skills: '{"stealth":7}', senses: 'blindsight 10 ft., darkvision 60 ft., passive Perception 10', languages: '',
+    challenge_rating: '1', xp: 200,
+    actions: '[{"name":"Bite","type":"melee_weapon","hit_bonus":5,"damage":"1d8+3","damage_type":"piercing","reach":5}]',
+    special_abilities: '[{"name":"Spider Climb","description":"The spider can climb difficult surfaces, including upside down on ceilings.","passive":true}]'
+  },
+  {
+    name: 'Ядовитая змея', type: 'beast', size: 'tiny', alignment: 'unaligned',
+    armor_class: 13, hit_points: 2, hit_dice: '1d4', speed: 30,
+    strength: 2, dexterity: 16, constitution: 11, intelligence: 1, wisdom: 10, charisma: 3,
+    skills: '{"perception":2}', senses: 'blindsight 10 ft., passive Perception 12', languages: '',
+    challenge_rating: '1/8', xp: 25,
+    actions: '[{"name":"Bite","type":"melee_weapon","hit_bonus":5,"damage":"1","damage_type":"piercing","reach":5,"saving_throw":{"ability":"constitution","dc":10,"success_effect":"half damage"}}]',
+    special_abilities: '[]'
+  },
+  {
+    name: 'Летучая мышь', type: 'beast', size: 'tiny', alignment: 'unaligned',
+    armor_class: 12, hit_points: 1, hit_dice: '1d4-1', speed: 5,
+    strength: 2, dexterity: 15, constitution: 8, intelligence: 2, wisdom: 12, charisma: 4,
+    skills: '{}', senses: 'blindsight 60 ft., passive Perception 11', languages: '',
+    challenge_rating: '0', xp: 10,
+    actions: '[{"name":"Bite","type":"melee_weapon","hit_bonus":0,"damage":"1","damage_type":"piercing","reach":5}]',
+    special_abilities: '[{"name":"Echolocation","description":"The bat can\'t use its blindsight while deafened.","passive":true},{"name":"Keen Hearing","description":"The bat has advantage on Wisdom (Perception) checks that rely on hearing.","passive":true}]'
+  },
+
+  // ГОБЛИНОИДЫ
+  {
+    name: 'Гоблин', type: 'humanoid', size: 'small', alignment: 'neutral evil',
+    armor_class: 15, hit_points: 7, hit_dice: '2d6', speed: 30,
+    strength: 8, dexterity: 14, constitution: 10, intelligence: 10, wisdom: 8, charisma: 8,
+    skills: '{"stealth":6}', senses: 'darkvision 60 ft., passive Perception 9', languages: 'Common, Goblin',
+    challenge_rating: '1/4', xp: 50,
+    actions: '[{"name":"Scimitar","type":"melee_weapon","hit_bonus":4,"damage":"1d6+2","damage_type":"slashing","reach":5},{"name":"Shortbow","type":"ranged_weapon","hit_bonus":4,"damage":"1d6+2","damage_type":"piercing","range":"80/320"}]',
+    special_abilities: '[{"name":"Nimble Escape","description":"The goblin can take the Disengage or Hide action as a bonus action on each of its turns.","passive":true}]'
+  },
+  {
+    name: 'Хобгоблин', type: 'humanoid', size: 'medium', alignment: 'lawful evil',
+    armor_class: 18, hit_points: 11, hit_dice: '2d8+2', speed: 30,
+    strength: 13, dexterity: 12, constitution: 12, intelligence: 10, wisdom: 10, charisma: 9,
+    skills: '{}', senses: 'darkvision 60 ft., passive Perception 10', languages: 'Common, Goblin',
+    challenge_rating: '1/2', xp: 100,
+    actions: '[{"name":"Longsword","type":"melee_weapon","hit_bonus":3,"damage":"1d8+1","damage_type":"slashing","reach":5},{"name":"Longbow","type":"ranged_weapon","hit_bonus":3,"damage":"1d8+1","damage_type":"piercing","range":"150/600"}]',
+    special_abilities: '[{"name":"Martial Advantage","description":"Once per turn, the hobgoblin can deal an extra 7 (2d6) damage to a creature it hits if that creature is within 5 feet of an ally.","passive":true}]'
+  },
+
+  // ОРКИ
+  {
+    name: 'Орк', type: 'humanoid', size: 'medium', alignment: 'chaotic evil',
+    armor_class: 13, hit_points: 15, hit_dice: '2d8+6', speed: 30,
+    strength: 16, dexterity: 12, constitution: 16, intelligence: 7, wisdom: 11, charisma: 10,
+    skills: '{"intimidation":2}', senses: 'darkvision 60 ft., passive Perception 10', languages: 'Common, Orc',
+    challenge_rating: '1/2', xp: 100,
+    actions: '[{"name":"Greataxe","type":"melee_weapon","hit_bonus":5,"damage":"1d12+3","damage_type":"slashing","reach":5},{"name":"Javelin","type":"ranged_weapon","hit_bonus":5,"damage":"1d6+3","damage_type":"piercing","range":"30/120"}]',
+    special_abilities: '[{"name":"Aggressive","description":"As a bonus action, the orc can move up to its speed toward a hostile creature that it can see.","passive":true}]'
+  },
+  {
+    name: 'Орк-вождь', type: 'humanoid', size: 'medium', alignment: 'chaotic evil',
+    armor_class: 13, hit_points: 93, hit_dice: '11d8+44', speed: 30,
+    strength: 18, dexterity: 12, constitution: 18, intelligence: 11, wisdom: 11, charisma: 16,
+    skills: '{"intimidation":5}', senses: 'darkvision 60 ft., passive Perception 10', languages: 'Common, Orc',
+    challenge_rating: '4', xp: 1100,
+    actions: '[{"name":"Greataxe","type":"melee_weapon","hit_bonus":6,"damage":"1d12+4","damage_type":"slashing","reach":5},{"name":"Spear","type":"ranged_weapon","hit_bonus":6,"damage":"1d6+4","damage_type":"piercing","range":"20/60"}]',
+    special_abilities: '[{"name":"Aggressive","description":"As a bonus action, the orc can move up to its speed toward a hostile creature.","passive":true},{"name":"Battle Cry","description":"Allies within 30 feet gain advantage on attack rolls until the start of the war chief\'s next turn.","limited_uses":1,"recharge":"short_rest"}]'
+  },
+
+  // НЕЖИТЬ
+  {
+    name: 'Скелет', type: 'undead', size: 'medium', alignment: 'lawful evil',
+    armor_class: 13, hit_points: 13, hit_dice: '2d8+4', speed: 30,
+    strength: 10, dexterity: 14, constitution: 15, intelligence: 6, wisdom: 8, charisma: 5,
+    skills: '{}', senses: 'darkvision 60 ft., passive Perception 9', languages: 'understands all languages it knew in life',
+    challenge_rating: '1/4', xp: 50,
+    damage_vulnerabilities: 'bludgeoning', damage_immunities: 'poison', condition_immunities: 'exhaustion, poisoned',
+    actions: '[{"name":"Shortsword","type":"melee_weapon","hit_bonus":4,"damage":"1d6+2","damage_type":"piercing","reach":5}]',
+    special_abilities: '[]'
+  },
+  {
+    name: 'Зомби', type: 'undead', size: 'medium', alignment: 'neutral evil',
+    armor_class: 8, hit_points: 22, hit_dice: '3d8+9', speed: 20,
+    strength: 13, dexterity: 6, constitution: 16, intelligence: 3, wisdom: 6, charisma: 5,
+    skills: '{}', senses: 'darkvision 60 ft., passive Perception 8', languages: 'understands all languages it knew in life',
+    challenge_rating: '1/4', xp: 50,
+    damage_immunities: 'poison', condition_immunities: 'poisoned',
+    actions: '[{"name":"Slam","type":"melee_weapon","hit_bonus":3,"damage":"1d6+1","damage_type":"bludgeoning","reach":5}]',
+    special_abilities: '[{"name":"Undead Fortitude","description":"If damage reduces the zombie to 0 hit points, it must make a Constitution saving throw with a DC of 5 + the damage taken. On a success, the zombie drops to 1 hit point instead.","passive":true}]'
+  },
+  {
+    name: 'Призрак', type: 'undead', size: 'medium', alignment: 'chaotic evil',
+    armor_class: 11, hit_points: 45, hit_dice: '10d8', speed: 0,
+    strength: 7, dexterity: 13, constitution: 10, intelligence: 10, wisdom: 12, charisma: 17,
+    skills: '{}', senses: 'darkvision 60 ft., passive Perception 11', languages: 'any languages it knew in life',
+    challenge_rating: '4', xp: 1100,
+    damage_resistances: 'acid, fire, lightning, thunder; bludgeoning, piercing, and slashing from nonmagical attacks',
+    damage_immunities: 'cold, necrotic, poison',
+    condition_immunities: 'charmed, exhaustion, frightened, grappled, paralyzed, petrified, poisoned, prone, restrained',
+    actions: '[{"name":"Withering Touch","type":"melee_weapon","hit_bonus":5,"damage":"4d6+3","damage_type":"necrotic","reach":5}]',
+    special_abilities: '[{"name":"Ethereal Sight","description":"The ghost can see 60 feet into the Ethereal Plane.","passive":true},{"name":"Incorporeal Movement","description":"The ghost can move through other creatures and objects as if they were difficult terrain.","passive":true}]'
+  },
+
+  // ДРАКОНЫ
+  {
+    name: 'Молодой красный дракон', type: 'dragon', size: 'large', alignment: 'chaotic evil',
+    armor_class: 18, hit_points: 178, hit_dice: '17d10+85', speed: 40,
+    strength: 23, dexterity: 10, constitution: 21, intelligence: 14, wisdom: 11, charisma: 19,
+    skills: '{"perception":8,"stealth":4}', senses: 'blindsight 30 ft., darkvision 120 ft., passive Perception 18',
+    languages: 'Common, Draconic', challenge_rating: '10', xp: 5900,
+    damage_immunities: 'fire',
+    actions: '[{"name":"Bite","type":"melee_weapon","hit_bonus":10,"damage":"2d10+6","damage_type":"piercing","reach":10},{"name":"Claw","type":"melee_weapon","hit_bonus":10,"damage":"2d6+6","damage_type":"slashing","reach":5},{"name":"Fire Breath","type":"ability","description":"The dragon exhales fire in a 30-foot cone. Each creature must make a DC 17 Dexterity saving throw, taking 56 (16d6) fire damage on a failed save, or half as much on a successful one.","saving_throw":{"ability":"dexterity","dc":17},"recharge":"5_6"}]',
+    special_abilities: '[]'
+  },
+  {
+    name: 'Виверна', type: 'dragon', size: 'large', alignment: 'unaligned',
+    armor_class: 13, hit_points: 110, hit_dice: '13d10+39', speed: 20,
+    strength: 19, dexterity: 10, constitution: 16, intelligence: 5, wisdom: 12, charisma: 6,
+    skills: '{"perception":4}', senses: 'darkvision 60 ft., passive Perception 14', languages: '',
+    challenge_rating: '6', xp: 2300,
+    actions: '[{"name":"Bite","type":"melee_weapon","hit_bonus":7,"damage":"2d6+4","damage_type":"piercing","reach":10},{"name":"Stinger","type":"melee_weapon","hit_bonus":7,"damage":"2d6+4","damage_type":"piercing","reach":10}]',
+    special_abilities: '[]'
+  }
+];
+
+let addedCount = 0;
+let skippedCount = 0;
+
+// Вставляем врагов с проверкой существования
+for (const enemy of enemies) {
+  try {
+    // Проверяем, существует ли уже такой враг
+    const existing = await pool.query(
+      'SELECT id FROM enemy_templates WHERE name = $1',
+      [enemy.name]
+    );
+    
+    if (existing.rows.length > 0) {
+      skippedCount++;
+      console.log(`   ⚠️  "${enemy.name}" already exists, skipping...`);
+      continue;
+    }
+    
+    // Вставляем нового врага
+    await pool.query(`
+      INSERT INTO enemy_templates (
+        name, type, size, alignment, armor_class, hit_points, hit_dice, speed,
+        strength, dexterity, constitution, intelligence, wisdom, charisma,
+        skills, senses, languages, challenge_rating, xp,
+        actions, special_abilities,
+        damage_vulnerabilities, damage_resistances, damage_immunities, condition_immunities,
+        is_template
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,true)
+    `, [
+      enemy.name, enemy.type, enemy.size, enemy.alignment,
+      enemy.armor_class, enemy.hit_points, enemy.hit_dice, enemy.speed,
+      enemy.strength, enemy.dexterity, enemy.constitution, enemy.intelligence, enemy.wisdom, enemy.charisma,
+      enemy.skills, enemy.senses, enemy.languages,
+      enemy.challenge_rating, enemy.xp,
+      enemy.actions, enemy.special_abilities,
+      enemy.damage_vulnerabilities || null, enemy.damage_resistances || null,
+      enemy.damage_immunities || null, enemy.condition_immunities || null
+    ]);
+    
+    addedCount++;
+    console.log(`   ✅ Added: ${enemy.name} (${enemy.type}, CR: ${enemy.challenge_rating})`);
+    
+  } catch (err) {
+    console.error(`   ❌ Error adding "${enemy.name}":`, err.message);
+  }
+}
+
+console.log(`\n📊 Enemy templates seeding results:`);
+console.log(`   ✅ Added: ${addedCount}`);
+console.log(`   ⚠️  Skipped: ${skippedCount}`);
+console.log(`   📦 Total in array: ${enemies.length}`);
+
+    // 8. Создаем тестовую кампанию
+    console.log('🎮 Creating test campaign...');
+    
+    // Получаем первого пользователя (предполагаем, что он уже создан)
+    const userResult = await pool.query('SELECT id FROM users LIMIT 1');
+    let dmId;
+    
+    if (userResult.rows.length === 0) {
+      // Создаем тестового пользователя если нет
+      const bcrypt = require('bcrypt');
+      const hashedPassword = await bcrypt.hash('password123', 10);
+      
+      const newUser = await pool.query(`
+        INSERT INTO users (email, username, password_hash, role)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id
+      `, ['dm@example.com', 'DungeonMaster', hashedPassword, 'dm']);
+      
+      dmId = newUser.rows[0].id;
+      console.log('Created test DM user with ID:', dmId);
+    } else {
+      dmId = userResult.rows[0].id;
+    }
+    
+    // Создаем кампанию
+    const campaignResult = await pool.query(`
+      INSERT INTO campaigns (name, description, dm_id, is_active)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT DO NOTHING
+      RETURNING id
+    `, [
+      'Проклятие Страда', 
+      'Под покровом вечного тумана лежит долина Баровия, управляемая загадочным графом Страдом фон Заровичем. Это место, где ночь вечна, а страх - постоянный спутник живых. Игроки оказываются втянутыми в мрачную историю проклятого графа и должны найти способ сбежать из этого царства ужаса.',
+      dmId,
+      true
+    ]);
+    
+    let campaignId;
+    if (campaignResult.rows.length > 0) {
+      campaignId = campaignResult.rows[0].id;
+    } else {
+      const existingCampaign = await pool.query('SELECT id FROM campaigns WHERE name = $1', ['Проклятие Страда']);
+      campaignId = existingCampaign.rows[0].id;
+    }
+    
+    console.log('Campaign created with ID:', campaignId);
+    
+    // Добавляем DM как игрока
+    await pool.query(`
+      INSERT INTO campaign_players (campaign_id, user_id, role)
+      VALUES ($1, $2, $3)
+      ON CONFLICT (campaign_id, user_id) DO UPDATE SET role = 'dm'
+    `, [campaignId, dmId, 'dm']);
+    
+    // 9. Создаем тестовых игроков и персонажей
+    console.log('👥 Creating test players and characters...');
+    
+    const bcrypt = require('bcrypt');
+    const hashedPassword = await bcrypt.hash('player123', 10);
+    
+    const testPlayers = [
+      { username: 'Aragorn', email: 'aragorn@example.com', charName: 'Арагорн', class: 'Следопыт', race: 'Человек' },
+      { username: 'Gandalf', email: 'gandalf@example.com', charName: 'Гэндальф', class: 'Волшебник', race: 'Человек' },
+      { username: 'Legolas', email: 'legolas@example.com', charName: 'Леголас', class: 'Следопыт', race: 'Эльф' },
+      { username: 'Gimli', email: 'gimli@example.com', charName: 'Гимли', class: 'Воин', race: 'Дварф' }
+    ];
+    
+    for (const player of testPlayers) {
+      // Создаем пользователя
+      const userResult = await pool.query(`
+        INSERT INTO users (email, username, password_hash, role)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (email) DO UPDATE SET username = EXCLUDED.username
+        RETURNING id
+      `, [player.email, player.username, hashedPassword, 'player']);
+      
+      const userId = userResult.rows[0].id;
+      
+      // Добавляем в кампанию
+      await pool.query(`
+        INSERT INTO campaign_players (campaign_id, user_id, role)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (campaign_id, user_id) DO NOTHING
+      `, [campaignId, userId, 'player']);
+      
+      // Создаем персонажа
+      const charResult = await pool.query(`
+        INSERT INTO characters (
+          name, class, race, level, user_id, campaign_id,
+          strength, dexterity, constitution, intelligence, wisdom, charisma,
+          hit_points, armor_class
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        RETURNING id
+      `, [
+        player.charName, player.class, player.race, 5, userId, campaignId,
+        16, 14, 15, 12, 13, 11,
+        45, 16
+      ]);
+      
+      const characterId = charResult.rows[0].id;
+      
+      // Связываем персонажа с игроком в кампании
+      await pool.query(`
+        UPDATE campaign_players 
+        SET character_id = $1
+        WHERE campaign_id = $2 AND user_id = $3
+      `, [characterId, campaignId, userId]);
+    }
+    
+    // 10. Создаем тестовую карту
+    console.log('🗺️ Creating test map...');
+    
+    const mapResult = await pool.query(`
+      INSERT INTO maps (name, width, height, grid_type, campaign_id, background_image)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id
+    `, [
+      'Замок Равенлофт',
+      30,
+      30,
+      'square',
+      campaignId,
+      '/assets/maps/castle-raveloft.jpg'
+    ]);
+    
+    const mapId = mapResult.rows[0].id;
+    
+    // Добавляем токены на карту
+    const tokens = [
+      { name: 'Арагорн', type: 'player', x: 5, y: 5, color: '#4CAF50' },
+      { name: 'Гэндальф', type: 'player', x: 6, y: 4, color: '#2196F3' },
+      { name: 'Леголас', type: 'player', x: 4, y: 6, color: '#FF9800' },
+      { name: 'Гимли', type: 'player', x: 7, y: 5, color: '#F44336' },
+      { name: 'Страд', type: 'monster', x: 15, y: 15, color: '#9C27B0' },
+      { name: 'Волк', type: 'monster', x: 14, y: 16, color: '#795548' },
+      { name: 'Волк', type: 'monster', x: 16, y: 14, color: '#795548' }
+    ];
+    
+    for (const token of tokens) {
+      await pool.query(`
+        INSERT INTO map_tokens (map_id, token_type, name, x, y, color)
+        VALUES ($1, $2, $3, $4, $5, $6)
+      `, [mapId, token.type, token.name, token.x, token.y, token.color]);
+    }
+    
+    // 11. Добавляем тестовые сообщения в чат
+    console.log('💬 Adding test chat messages...');
+    
+    const messages = [
+      { user: 'DungeonMaster', message: 'Добро пожаловать в Баровию! Туман окружает вас со всех сторон...', type: 'system' },
+      { user: 'Aragorn', message: 'Я чувствую зло в этом месте. Будьте настороже.', type: 'chat' },
+      { user: 'Gandalf', message: 'Страд знает о нашем присутствии. Мы должны двигаться осторожно.', type: 'chat' },
+      { user: 'DungeonMaster', message: 'Бросаю проверку восприятия для всех: /roll 1d20+2', type: 'roll' }
+    ];
+    
+    for (const msg of messages) {
+      let userId = null;
+      if (msg.user !== 'DungeonMaster') {
+        const userResult = await pool.query('SELECT id FROM users WHERE username = $1', [msg.user]);
+        userId = userResult.rows[0]?.id;
+      } else {
+        userId = dmId;
+      }
+      
+      await pool.query(`
+        INSERT INTO campaign_messages (campaign_id, user_id, message, type)
+        VALUES ($1, $2, $3, $4)
+      `, [campaignId, userId, msg.message, msg.type]);
+    }
+    
+    // 12. Создаем тестовый бой
+    console.log('⚔️ Creating test battle...');
+    
+    const combatants = [
+      { id: 'char1', name: 'Арагорн', type: 'player', initiative: 18, hp: 45, maxHp: 45, ac: 16 },
+      { id: 'char2', name: 'Гэндальф', type: 'player', initiative: 12, hp: 32, maxHp: 32, ac: 12 },
+      { id: 'char3', name: 'Леголас', type: 'player', initiative: 22, hp: 38, maxHp: 38, ac: 15 },
+      { id: 'char4', name: 'Гимли', type: 'player', initiative: 8, hp: 52, maxHp: 52, ac: 17 },
+      { id: 'mon1', name: 'Страд', type: 'monster', initiative: 15, hp: 144, maxHp: 144, ac: 16 },
+      { id: 'mon2', name: 'Волк 1', type: 'monster', initiative: 14, hp: 11, maxHp: 11, ac: 13 },
+      { id: 'mon3', name: 'Волк 2', type: 'monster', initiative: 10, hp: 11, maxHp: 11, ac: 13 }
+    ];
+    
+    await pool.query(`
+      INSERT INTO battles (campaign_id, map_id, combatants, state, current_turn, round, started_at)
+      VALUES ($1, $2, $3, 'active', 0, 1, CURRENT_TIMESTAMP)
+    `, [campaignId, mapId, JSON.stringify(combatants)]);
+    
+    console.log('✨ All test data seeded successfully!');
     console.log('✅ Test data seeded successfully!');
   } catch (error) {
     console.error('❌ Error seeding data:', error);

@@ -6,6 +6,7 @@ const RegisterPage = () => import('@/views/RegisterPage.vue')
 const DashboardPage = () => import('@/views/DashboardPage.vue')
 const CharactersPage = () => import('@/views/CharactersPage.vue')
 const CampaignsPage = () => import('@/views/CampaignsPage.vue')
+const CampaignDetailPage = () => import('@/views/CampaignDetailPage.vue')
 const CharacterView = () => import('@/views/CharacterView.vue')
 const CharacterEdit = () => import('@/views/CharacterEdit.vue')
 
@@ -41,14 +42,8 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/campaigns',
-      name: 'campaigns',
-      component: CampaignsPage,
-      meta: { requiresAuth: true }
-    },
-    {
       path: '/character/:id',
-      name: 'cequeharacter',
+      name: 'character-view',
       component: CharacterView,
       meta: { requiresAuth: true }
     },
@@ -59,14 +54,27 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/campaigns',
+      name: 'campaigns',
+      component: CampaignsPage,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/campaigns/:id',
+      name: 'campaign-detail',
+      component: CampaignDetailPage,
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/debug-auth',
       name: 'debug-auth',
       component: () => import('@/views/DebugAuth.vue')
     },
     {
-      path: '/character/equipment',
-      name: 'equipment',
-      component: () => import('@/components/character/InventoryManager.vue')
+      path: '/profile',
+      name: 'Profile',
+      component: () => import('@/components/common/UserMenu.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })
@@ -79,15 +87,12 @@ router.beforeEach((to, from, next) => {
   console.log('Requires Auth:', to.meta.requiresAuth)
   
   const authStore = useAuthStore()
-  
-  // Проверяем актуальное состояние
   const isAuthenticated = authStore.isAuthenticated && !!authStore.token
   
   console.log('Auth status:', {
     isAuthenticated,
-    token: authStore.token,
-    user: authStore.user,
-    localStorageToken: localStorage.getItem('token')
+    token: authStore.token ? 'Present' : 'None',
+    user: authStore.user?.username
   })
   
   if (to.meta.requiresAuth && !isAuthenticated) {

@@ -9,15 +9,19 @@ const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:5173",
-    methods: ["GET", "POST"]
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true
+}));
 app.use(express.json());
 
-// Добавьте это ПОСЛЕ app.use(express.json()) и ДО маршрутов
+// Логирование запросов
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`);
   if (req.body && Object.keys(req.body).length > 0) {
@@ -42,7 +46,7 @@ pool.connect((err, client, release) => {
   }
 });
 
-// Простая главная страница с информацией об API
+// Главная страница
 app.get('/', (req, res) => {
   res.send(`
     <!DOCTYPE html>
@@ -174,46 +178,38 @@ app.get('/', (req, res) => {
 });
 
 // Routes with authentication
-app.use('/api/auth', require('./routes/auth')); // Публичные маршруты аутентификации
-app.use('/api/characters', authMiddleware, require('./routes/characters')); // Защищенные маршруты персонажей
-app.use('/api', authMiddleware, require('./routes/equipment')); // Защищенные
-app.use('/api/campaigns', authMiddleware, require('./routes/campaigns')); // Защищенные
-app.use('/api/spells', require('./routes/spells')); // Публичные
-app.use('/api/monsters', require('./routes/monsters')); // Публичные
-app.use('/api/maps', authMiddleware, require('./routes/maps')); // Защищенные
-app.use('/api/skills', authMiddleware, require('./routes/skills'));  // Добавляем skills
-// Socket.io для реального времени
-io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/characters', authMiddleware, require('./routes/characters'));
+app.use('/api', authMiddleware, require('./routes/equipment'));
+app.use('/api/campaigns', authMiddleware, require('./routes/campaigns'));
+app.use('/api/spells', require('./routes/spells'));
+app.use('/api/monsters', require('./routes/monsters'));
+app.use('/api/maps', authMiddleware, require('./routes/maps'));
+app.use('/api/skills', authMiddleware, require('./routes/skills'));
+app.use('/api/enemies', authMiddleware, require('./routes/enemies'));
+app.use('/api/battles', authMiddleware, require('./routes/battles'));
 
-  socket.on('join-campaign', (campaignId) => {
-    socket.join(`campaign-${campaignId}`);
-    console.log(`User ${socket.id} joined campaign ${campaignId}`);
-  });
-
-  socket.on('send-message', (data) => {
-    io.to(`campaign-${data.campaignId}`).emit('new-message', data);
-  });
-
-  socket.on('update-character', (data) => {
-    io.to(`campaign-${data.campaignId}`).emit('character-updated', data);
-  });
-
-  socket.on('roll-dice', (data) => {
-    io.to(`campaign-${data.campaignId}`).emit('dice-rolled', data);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-  });
+// Socket.io middleware для аутентификации
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (!token) {
+    return next(new Error('Authentication error'));
+  }
+  
+  try {
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    socket.user = decoded;
+    next();
+  } catch (err) {
+    next(new Error('Authentication error'));
+  }
 });
 
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`)
-  console.log('Body:', req.body)
-  console.log('Headers:', req.headers)
-  next()
-})
+// Подключаем campaignSocket
+const setupCampaignSocket = require('./routes/campaignSocket.js');
+setupCampaignSocket(io);
+
 // Глобальная обработка ошибок
 app.use((err, req, res, next) => {
   console.error(err.stack);
